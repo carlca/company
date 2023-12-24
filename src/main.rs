@@ -1,11 +1,8 @@
 use std::error::Error;
 use csv::Reader;
-// use sled::{Config, Db};
-// use std::io::Write;
 use console::Term;
-
-// type StdResult<T, E> = std::result::Result<T, E>;
-// type MongoResult<T> = mongodb::error::Result<T>;
+use mongodb::{Client};
+use mongodb::bson::{Bson, Document};
 
 fn main() -> Result<(), Box<dyn Error>> {
   loop {
@@ -32,11 +29,11 @@ fn main() -> Result<(), Box<dyn Error>> {
       //     eprintln!("Error reading sled data: {:?}", e);
       //   }
       // }
-      // Some('m') | Some('M') => {
-      //   if let Err(e) = setup_mongodb() {
-      //     eprintln!("Error setting up mongodb: {:?}", e);
-      //   }
-      // }
+      Some('m') | Some('M') => {
+        if let Err(e) = setup_mongodb() {
+          eprintln!("Error setting up mongodb: {:?}", e);
+        }
+      }
       Some('q') | Some('Q') => break,
       _ => (),
     }
@@ -109,19 +106,72 @@ fn parse_csv_headers() -> Result<(), Box<dyn Error>> {
 //   Ok(())
 // }
 
-// #[tokio::main]
-// async fn setup_mongodb() -> StdResult<(), mongodb::error::Error> {
-//   let client = Client::with_uri_str("mongodb://localhost:27017").await?;
-//   let databases = client.list_database_names(None, None).await?;
-//
-//   // Print out the names of the databases
-//   for db_name in databases {
-//     println!("{}", db_name);
-//   }
-//   Ok(())
-// }
+#[tokio::main]
+async fn setup_mongodb() -> Result<(), mongodb::error::Error> {
+  let client = Client::with_uri_str("mongodb://localhost:27017").await?;
+  let databases = client.list_database_names(None, None).await?;
+
+  // Print out the names of the databases
+  for db in databases {
+    println!("{}", db);
+  }
+
+  let db = client.database("local");
+  let collection = db.collection::<Document>("company");
+
+  match collection.find_one(None, None).await? {
+    Some(document) => {
+      println!("Field names and types for collection '{}':", collection.name());
+      print_fields(&document, String::new());
+    },
+    None => println!("No document found"),
+  }
+
+  Ok(())
+}
+
+fn print_fields(document: &Document, indent: String) {
+  for (key, value) in document.iter() {
+    match value {
+      Bson::Document(nested_doc) => {
+        println!("{}Field name: '{}', Type: 'Document'", indent, key);
+        print_fields(nested_doc, format!("{}  ", indent));  // Recurse into the nested document with increased indentation
+      },
+      _ => {
+        let field_type = match_type(&value);
+        println!("{}Field name: '{}', Type: '{}'", indent, key, field_type);
+      }
+    }
+  }
+}
 
 fn read_single_key() -> Option<char> {
   let term = Term::buffered_stdout();
   term.read_char().ok()
+}
+
+fn match_type(b: &Bson) -> String {
+  match b {
+    Bson::Double(_) => "Double",
+    Bson::String(_) => "String",
+    Bson::Array(_) => "Array",
+    Bson::Document(_) => "Document",
+    Bson::Boolean(_) => "Boolean",
+    Bson::Null => "Null",
+    Bson::RegularExpression(_) => "RegularExpression",
+    Bson::JavaScriptCode(_) => "JavaScriptCode",
+    Bson::ObjectId(_) => "ObjectId",
+    Bson::DateTime(_) => "DateTime",
+    Bson::Symbol(_) => "Symbol",
+    Bson::JavaScriptCodeWithScope(_) => "JavaScriptCodeWithScope",
+    Bson::Timestamp { .. } => "Timestamp",
+    Bson::Binary(_) => "Binary",
+    Bson::Decimal128(_) => "Decimal128",
+    Bson::MaxKey => "MaxKey",
+    Bson::MinKey => "MinKey",
+    Bson::Undefined => "Undefined",
+    Bson::Int32(_) => "Int32",
+    Bson::Int64(_) => "Int64",
+    _ => "",
+  }.to_string()
 }
