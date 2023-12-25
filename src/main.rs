@@ -1,3 +1,5 @@
+mod company;
+
 use std::error::Error;
 use csv::Reader;
 use console::Term;
@@ -109,9 +111,7 @@ async fn read_cr0_docs() -> Result<(), Box<dyn Error>> {
   }, None).await?;
   while let Some(result) = cursor.next().await {
     let comp: Document = result?;
-    println!("Company: {}",
-             comp.get_str("CompanyName")?,
-    );
+    print!("Company: {}", comp.get_str("CompanyName")?,);
   }
   Ok(())
 }
