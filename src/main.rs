@@ -1,5 +1,7 @@
 mod company;
 
+use company::Company;
+
 use std::error::Error;
 use csv::Reader;
 use console::Term;

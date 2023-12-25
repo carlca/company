@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Company {
+pub struct Company {
   #[serde(rename = "CompanyName")]
   company_name: String,
   #[serde(rename = "CompanyNumber")]
@@ -57,7 +57,7 @@ struct Company {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct RegAddress {
+pub struct RegAddress {
   #[serde(rename = "CareOf")]
   care_of: String,
   #[serde(rename = "POBox")]
@@ -77,7 +77,7 @@ struct RegAddress {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Accounts {
+pub struct Accounts {
   #[serde(rename = "AccountRefDay")]
   account_ref_day: u8,
   #[serde(rename = "AccountRefMonth")]
@@ -91,7 +91,7 @@ struct Accounts {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Returns {
+pub struct Returns {
   #[serde(rename = "NextDueDate")]
   next_due_date: String,
   #[serde(rename = "LastMadeUpDate")]
@@ -99,7 +99,7 @@ struct Returns {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Mortgages {
+pub struct Mortgages {
   #[serde(rename = "NumMortCharges")]
   num_mort_charges: u16,
   #[serde(rename = "NumMortOutstanding")]
@@ -111,7 +111,7 @@ struct Mortgages {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct SICCode {
+pub struct SICCode {
   #[serde(rename = "SicText_1")]
   sic_text_1: String,
   #[serde(rename = "SicText_2")]
@@ -123,7 +123,7 @@ struct SICCode {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct LimitedPartnerships {
+pub struct LimitedPartnerships {
   #[serde(rename = "NumGenPartners")]
   num_gen_partners: u32,
   #[serde(rename = "NumLimPartners")]
@@ -131,7 +131,7 @@ struct LimitedPartnerships {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct PreviousName {
+pub struct PreviousName {
   #[serde(rename = "CONDATE")]
   con_date: String,
   #[serde(rename = "CompanyName")]
