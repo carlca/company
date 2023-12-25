@@ -2,7 +2,7 @@ use std::error::Error;
 use csv::Reader;
 use console::Term;
 use mongodb::{Client};
-use mongodb::bson::{Bson, Document};
+use mongodb::bson::{Bson, doc, Document};
 use futures::stream::StreamExt;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -10,6 +10,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let msg = "H to read csv headers,\n".to_owned() +
               "G to get MongoDB fields,\n" +
               "R to read first 23 MongoDB docs,\n" +
+              "C to read first CR0 docs,\n" +
               "or Q to quit...";
     println!("{}", msg);
     let key = read_single_key();
@@ -27,6 +28,11 @@ fn main() -> Result<(), Box<dyn Error>> {
       Some('r') | Some('R') => {
         if let Err(e) = read_first_23_docs() {
           eprintln!("Error reading first 23 MongoDB docs: {:?}", e);
+        }
+      }
+      Some('c') | Some('C') => {
+        if let Err(e) = read_cr0_docs() {
+          eprintln!("Error reading CR0 docs: {:?}", e);
         }
       }
       Some('q') | Some('Q') => break,
@@ -92,6 +98,24 @@ async fn read_first_23_docs() -> Result<(), Box<dyn Error>> {
 
   Ok(())
 }
+
+#[tokio::main]
+async fn read_cr0_docs() -> Result<(), Box<dyn Error>> {
+  let client = Client::with_uri_str("mongodb://localhost:27017").await?;
+  let mut cursor = client.database("local").collection::<Document>("company").find(doc! {
+    "RegAddress.PostCode": doc! {
+        "$regex": "CR0"
+    }
+  }, None).await?;
+  while let Some(result) = cursor.next().await {
+    let comp: Document = result?;
+    println!("Company: {}",
+             comp.get_str("CompanyName")?,
+    );
+  }
+  Ok(())
+}
+
 
 fn print_fields(document: &Document, indent: String) {
   for (key, value) in document.iter() {

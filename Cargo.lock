@@ -190,6 +190,7 @@ dependencies = [
  "csv",
  "futures",
  "mongodb",
+ "serde",
  "sled",
  "tokio",
 ]
