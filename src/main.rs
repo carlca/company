@@ -79,7 +79,11 @@ async fn read_first_23_docs() -> Result<(), Box<dyn Error>> {
   let mut count = 0;
   while let Some(result) = cursor.next().await {
     let comp: Document = result?;
-    println!("Company: {}", comp.get_str("CompanyName")?);
+    println!("Company: {}",
+             comp.get_str("CompanyName")?,
+             // comp.get_str("AddressLine1")?,
+             // comp.get_str("RegAddress.AddressLine2")?,
+    );
     count += 1;
     if count == 23 {
       break;
