@@ -6,7 +6,7 @@ use console::Term;
 use csv::Reader;
 use futures::stream::StreamExt;
 use mongodb::bson::{doc, Bson, Document};
-use mongodb::Client;
+use mongodb::{bson, Client};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -90,19 +90,25 @@ async fn get_mongodb_fields() -> Result<(), mongodb::error::Error> {
 #[tokio::main]
 async fn read_first_23_docs() -> Result<(), Box<dyn Error>> {
   let client = Client::with_uri_str("mongodb://localhost:27017").await?;
-  let companies = client.database("local").collection("company");
+  let companies: mongodb::Collection<Document> = client.database("local").collection("company");
   let mut cursor = companies.find(None, None).await?;
   let mut count = 0;
   while let Some(result) = cursor.next().await {
     match result {
       Ok(doc) => {
-        if let Ok(company) = mongodb::bson::from_bson(Bson::Document(doc)) {
-          let company: Company = company;
-          let pretty_company = serde_json::to_string_pretty(&company).unwrap();
-          println!("{}", pretty_company);
-          println!("");
+        // The Bson document is successfully printer here
+        println!("{:?}", Bson::Document(doc.clone()));
+        // This if fails presumably dues to some parse error
+        let result = bson::from_bson(Bson::Document(doc));
+        match result {
+          Ok(company) => {
+            let company: Company = company;
+            let pretty_company = serde_json::to_string_pretty(&company).unwrap();
+            println!("{}", pretty_company);
+          },
+          Err(e) => eprintln!("Error: {}", e),
         }
-      }
+      },
       Err(e) => eprintln!("Error: {}", e),
     }
     count += 1;
