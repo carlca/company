@@ -2,47 +2,50 @@ mod company;
 
 use company::Company;
 
-use std::error::Error;
-use csv::Reader;
 use console::Term;
-use mongodb::{Client};
-use mongodb::bson::{Bson, doc, Document};
+use csv::Reader;
 use futures::stream::StreamExt;
+use mongodb::bson::{doc, Bson, Document};
+use mongodb::Client;
+use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
-  loop {
-    let msg = "H to read csv headers,\n".to_owned() +
-              "G to get MongoDB fields,\n" +
-              "R to read first 23 MongoDB docs,\n" +
-              "C to read first CR0 docs,\n" +
-              "or Q to quit...";
-    println!("{}", msg);
-    let key = read_single_key();
-    match key {
-      Some('h') | Some('H') => {
-        if let Err(e) = parse_csv_headers() {
-          eprintln!("Error reading CSV headers: {:?}", e);
-        }
-      }
-      Some('g') | Some('G') => {
-        if let Err(e) = get_mongodb_fields() {
-          eprintln!("Error setting up mongodb: {:?}", e);
-        }
-      }
-      Some('r') | Some('R') => {
-        if let Err(e) = read_first_23_docs() {
-          eprintln!("Error reading first 23 MongoDB docs: {:?}", e);
-        }
-      }
-      Some('c') | Some('C') => {
-        if let Err(e) = read_cr0_docs() {
-          eprintln!("Error reading CR0 docs: {:?}", e);
-        }
-      }
-      Some('q') | Some('Q') => break,
-      _ => (),
-    }
+  if let Err(e) = read_first_23_docs() {
+    eprintln!("Error reading first 23 MongoDB docs: {:?}", e);
   }
+  // loop {
+  //   let msg = "H to read csv headers,\n".to_owned()
+  //     + "G to get MongoDB fields,\n"
+  //     + "R to read first 23 MongoDB docs,\n"
+  //     + "C to read first CR0 docs,\n"
+  //     + "or Q to quit...";
+  //   println!("{}", msg);
+  //   let key = read_single_key();
+  //   match key {
+  //     Some('h') | Some('H') => {
+  //       if let Err(e) = parse_csv_headers() {
+  //         eprintln!("Error reading CSV headers: {:?}", e);
+  //       }
+  //     }
+  //     Some('g') | Some('G') => {
+  //       if let Err(e) = get_mongodb_fields() {
+  //         eprintln!("Error setting up mongodb: {:?}", e);
+  //       }
+  //     }
+  //     Some('r') | Some('R') => {
+  //       if let Err(e) = read_first_23_docs() {
+  //         eprintln!("Error reading first 23 MongoDB docs: {:?}", e);
+  //       }
+  //     }
+  //     Some('c') | Some('C') => {
+  //       if let Err(e) = read_cr0_docs() {
+  //         eprintln!("Error reading CR0 docs: {:?}", e);
+  //       }
+  //     }
+  //     Some('q') | Some('Q') => break,
+  //     _ => (),
+  //   }
+  // }
   Ok(())
 }
 
@@ -72,9 +75,12 @@ async fn get_mongodb_fields() -> Result<(), mongodb::error::Error> {
 
   match collection.find_one(None, None).await? {
     Some(document) => {
-      println!("Field names and types for collection '{}':", collection.name());
+      println!(
+        "Field names and types for collection '{}':",
+        collection.name()
+      );
       print_fields(&document, String::new());
-    },
+    }
     None => println!("No document found"),
   }
 
@@ -88,36 +94,46 @@ async fn read_first_23_docs() -> Result<(), Box<dyn Error>> {
   let mut cursor = companies.find(None, None).await?;
   let mut count = 0;
   while let Some(result) = cursor.next().await {
-    let comp: Document = result?;
-    println!("Company: {}",
-             comp.get_str("CompanyName")?,
-             // comp.get_str("AddressLine1")?,
-             // comp.get_str("RegAddress.AddressLine2")?,
-    );
+    match result {
+      Ok(doc) => {
+        if let Ok(company) = mongodb::bson::from_bson(Bson::Document(doc)) {
+          let company: Company = company;
+          let pretty_company = serde_json::to_string_pretty(&company).unwrap();
+          println!("{}", pretty_company);
+          println!("");
+        }
+      }
+      Err(e) => eprintln!("Error: {}", e),
+    }
     count += 1;
     if count == 23 {
       break;
     }
   }
-
   Ok(())
 }
 
 #[tokio::main]
 async fn read_cr0_docs() -> Result<(), Box<dyn Error>> {
   let client = Client::with_uri_str("mongodb://localhost:27017").await?;
-  let mut cursor = client.database("local").collection::<Document>("company").find(doc! {
-    "RegAddress.PostCode": doc! {
-        "$regex": "CR0"
-    }
-  }, None).await?;
+  let mut cursor = client
+    .database("local")
+    .collection::<Document>("company")
+    .find(
+      doc! {
+        "RegAddress.PostCode": doc! {
+            "$regex": "CR0"
+        }
+      },
+      None,
+    )
+    .await?;
   while let Some(result) = cursor.next().await {
     let comp: Document = result?;
     print!("Company: {}", comp.get_str("CompanyName")?,);
   }
   Ok(())
 }
-
 
 fn print_fields(document: &Document, indent: String) {
   for (key, value) in document.iter() {
@@ -126,7 +142,7 @@ fn print_fields(document: &Document, indent: String) {
         println!("{}Field name: '{}', Type: 'Document'", indent, key);
         // Recurse into the nested document with increased indentation
         print_fields(nested_doc, format!("{}  ", indent));
-      },
+      }
       _ => {
         let field_type = match_type(&value);
         println!("{}Field name: '{}', Type: '{}'", indent, key, field_type);
@@ -163,5 +179,6 @@ fn match_type(b: &Bson) -> String {
     Bson::Int32(_) => "Int32",
     Bson::Int64(_) => "Int64",
     _ => "",
-  }.to_string()
+  }
+  .to_string()
 }
