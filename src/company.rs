@@ -1,46 +1,48 @@
+use mongodb::bson::Bson;
 use mongodb::bson::oid::ObjectId;
-use serde::de::{Deserializer, Error, Unexpected, Visitor};
-use std::fmt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub enum NumberOrString {
+#[serde(untagged)]
+pub enum Variant {
+  Vec(Bson),
   Number(i32),
+  Float(f64),
   String(String),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Company {
   #[serde(rename = "_id")]
-  id: ObjectId,
+  id: Option<ObjectId>,
   #[serde(rename = "CompanyName")]
-  company_name: Option<String>,
-  #[serde(rename = "CompanyNumber", deserialize_with = "number_or_string")]
-  company_number: NumberOrString,
+  company_name: Option<Variant>,
+  #[serde(rename = "CompanyNumber")]
+  company_number: Option<Variant>,
   #[serde(rename = "RegAddress")]
-  reg_address: RegAddress,
+  reg_address: Option<RegAddress>,
   #[serde(rename = "CompanyCategory")]
-  company_category: Option<String>,
+  company_category: Option<Variant>,
   #[serde(rename = "CompanyStatus")]
-  company_status: Option<String>,
+  company_status: Option<Variant>,
   #[serde(rename = "CountryOfOrigin")]
-  country_of_origin: Option<String>,
+  country_of_origin: Option<Variant>,
   #[serde(rename = "DissolutionDate")]
-  dissolution_date: Option<String>,
+  dissolution_date: Option<Variant>,
   #[serde(rename = "IncorporationDate")]
-  incorporation_date: Option<String>,
+  incorporation_date: Option<Variant>,
   #[serde(rename = "Accounts")]
-  accounts: Accounts,
+  accounts: Option<Accounts>,
   #[serde(rename = "Returns")]
-  returns: Returns,
+  returns: Option<Returns>,
   #[serde(rename = "Mortgages")]
-  mortgages: Mortgages,
+  mortgages: Option<Mortgages>,
   #[serde(rename = "SICCode")]
-  sic_code: SICCode,
+  sic_code: Option<SICCode>,
   #[serde(rename = "LimitedPartnerships")]
-  limited_partnerships: LimitedPartnerships,
+  limited_partnerships: Option<LimitedPartnerships>,
   #[serde(rename = "URI")]
-  uri: Option<String>,
+  uri: Option<Variant>,
   #[serde(rename = "PreviousName_1")]
   previous_name_1: Option<PreviousName>,
   #[serde(rename = "PreviousName_2")]
@@ -62,129 +64,89 @@ pub struct Company {
   #[serde(rename = "PreviousName_10")]
   previous_name_10: Option<PreviousName>,
   #[serde(rename = "ConfStmtNextDueDate")]
-  conf_stmt_next_due_date: Option<String>,
+  conf_stmt_next_due_date: Option<Variant>,
   #[serde(rename = "confStmtLastMadeUpDate")]
-  conf_stmt_last_made_up_date: Option<String>,
+  conf_stmt_last_made_up_date: Option<Variant>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RegAddress {
   #[serde(rename = "CareOf")]
-  care_of: Option<String>,
+  care_of: Option<Variant>,
   #[serde(rename = "POBox")]
-  po_box: Option<String>,
+  po_box: Option<Variant>,
   #[serde(rename = "AddressLine1")]
-  address_line_1: Option<String>,
+  address_line_1: Option<Variant>,
   #[serde(rename = "AddressLine2")]
-  address_line_2: Option<String>,
+  address_line_2: Option<Variant>,
   #[serde(rename = "PostTown")]
-  post_town: Option<String>,
+  post_town: Option<Variant>,
   #[serde(rename = "County")]
-  county: Option<String>,
+  county: Option<Variant>,
   #[serde(rename = "Country")]
-  country: Option<String>,
+  country: Option<Variant>,
   #[serde(rename = "PostCode")]
-  post_code: Option<String>,
+  post_code: Option<Variant>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Accounts {
   #[serde(rename = "AccountRefDay")]
-  account_ref_day: i32,
+  account_ref_day: Option<i32>,
   #[serde(rename = "AccountRefMonth")]
-  account_ref_month: i32,
+  account_ref_month: Option<i32>,
   #[serde(rename = "NextDueDate")]
-  next_due_date: Option<String>,
+  next_due_date: Option<Variant>,
   #[serde(rename = "LastMadeUpDate")]
-  last_made_up_date: Option<String>,
+  last_made_up_date: Option<Variant>,
   #[serde(rename = "AccountCategory")]
-  account_category: Option<String>,
+  account_category: Option<Variant>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Returns {
   #[serde(rename = "NextDueDate")]
-  next_due_date: Option<String>,
+  next_due_date: Option<Variant>,
   #[serde(rename = "LastMadeUpDate")]
-  last_made_up_date: Option<String>,
+  last_made_up_date: Option<Variant>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Mortgages {
   #[serde(rename = "NumMortCharges")]
-  num_mort_charges: i32,
+  num_mort_charges: Option<i32>,
   #[serde(rename = "NumMortOutstanding")]
-  num_mort_outstanding: i32,
+  num_mort_outstanding: Option<i32>,
   #[serde(rename = "NumMortPartSatisfied")]
-  num_mort_part_satisfied: i32,
+  num_mort_part_satisfied: Option<i32>,
   #[serde(rename = "NumMortSatisfied")]
-  num_mort_satisfied: i32,
+  num_mort_satisfied: Option<i32>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SICCode {
   #[serde(rename = "SicText_1")]
-  sic_text_1: Option<String>,
+  sic_text_1: Option<Variant>,
   #[serde(rename = "SicText_2")]
-  sic_text_2: Option<String>,
+  sic_text_2: Option<Variant>,
   #[serde(rename = "SicText_3")]
-  sic_text_3: Option<String>,
+  sic_text_3: Option<Variant>,
   #[serde(rename = "SicText_4")]
-  sic_text_4: Option<String>,
+  sic_text_4: Option<Variant>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LimitedPartnerships {
   #[serde(rename = "NumGenPartners")]
-  num_gen_partners: i32,
+  num_gen_partners: Option<i32>,
   #[serde(rename = "NumLimPartners")]
-  num_lim_partners: i32,
+  num_lim_partners: Option<i32>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PreviousName {
   #[serde(rename = "CONDATE")]
-  con_date: Option<String>,
+  con_date: Option<Variant>,
   #[serde(rename = "CompanyName")]
-  company_name: Option<String>,
-}
-
-fn number_or_string<'de, D>(deserializer: D) -> Result<NumberOrString, D::Error>
-  where
-    D: Deserializer<'de>,
-{
-  struct NumberOrStringVisitor;
-
-  impl<'de> Visitor<'de> for NumberOrStringVisitor {
-    type Value = NumberOrString;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-      formatter.write_str("a string or a number")
-    }
-
-    fn visit_i64<E>(self, v: i64) -> Result<NumberOrString, E>
-      where
-        E: Error,
-    {
-      Ok(NumberOrString::Number(v as i32))
-    }
-
-    fn visit_u64<E>(self, v: u64) -> Result<NumberOrString, E>
-      where
-        E: Error,
-    {
-      Ok(NumberOrString::Number(v as i32))
-    }
-
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-      where
-        E: Error,
-    {
-      match v.parse::<i32>() {
-        Ok(i) => Ok(NumberOrString::Number(i)),
-        Err(_) => Ok(NumberOrString::String(v.to_string()))
-      }
-    }
-  }
-  deserializer.deserialize_any(NumberOrStringVisitor)
+  company_name: Option<Variant>,
 }
