@@ -1,6 +1,4 @@
-mod company;
-
-use company::Company;
+use company::company::Company;
 use futures::stream::StreamExt;
 use mongodb::bson::{Bson, Document};
 use mongodb::{bson, Client};
@@ -26,7 +24,7 @@ async fn read_n_docs() -> Result<(), Box<dyn Error>> {
     match result {
       Ok(doc) => {
         // The Bson document is successfully printed here
-        if count == 1315378 {
+        if count == 1 {
           println!("{:?}", Bson::Document(doc.clone()));
           std::io::stdout().flush()?;
         }
@@ -36,7 +34,7 @@ async fn read_n_docs() -> Result<(), Box<dyn Error>> {
           Ok(company) => {
             let company: Company = company;
             let pretty_company = serde_json::to_string_pretty(&company).unwrap();
-            if count == 1315378 {
+            if count == 1 {
               println!("{}", pretty_company);
               std::io::stdout().flush()?;
             }
