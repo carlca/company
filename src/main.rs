@@ -25,7 +25,7 @@ async fn read_n_docs() -> Result<(), Box<dyn Error>> {
   while let Some(result) = cursor.next().await {
     match result {
       Ok(doc) => {
-        // The Bson document is successfully printer here
+        // The Bson document is successfully printed here
         if count == 1315378 {
           println!("{:?}", Bson::Document(doc.clone()));
           std::io::stdout().flush()?;
