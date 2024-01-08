@@ -1,7 +1,11 @@
 use std::fs::File;
 use std::process;
 use std::error::Error;
+use std::io::Write;
+use csv::StringRecord;
 use company::field_map::FieldMap;
+
+const TOTAL_COMPANY_COUNT: f64 = 5467419.0;
 
 fn main() {
   if let Err(err) = run() {
@@ -22,18 +26,29 @@ fn run() -> Result<(), Box<dyn Error>> {
   let output_headers: Vec<String> = headers
     .iter()
     .map(|field| {
-      // Convert field to String since it is a &str
       let field = field.to_string();
-      // If the field is found in the FieldMap, it will be replaced by the new name
-      // else, the original name will be retained.
       map.get(&field)
     })
     .collect();
 
-  for header in output_headers {
-    println!("{}", header);
+  let mut count = 0;
+  let mut writer = csv::Writer::from_path("./data/Company2.csv")?;
+  let _ = writer.write_record(&StringRecord::from(output_headers));
+  for result in reader.records() {
+    let record = result?;
+    writer.write_record(&record)?;
+    count += 1;
+    if count % 1000 == 0 {
+      show_progress(&count);
+    }
   }
+  show_progress(&count);
+  let _ = writer.flush();
 
   Ok(())
 }
 
+fn show_progress(count: &i32) {
+  print!("\rRecords processed: {} ({:.4}% done)", count, (*count as f64 / TOTAL_COMPANY_COUNT) * 100.0);
+  std::io::stdout().flush().unwrap();
+}
