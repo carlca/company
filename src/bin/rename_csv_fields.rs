@@ -5,7 +5,7 @@ use std::io::Write;
 use csv::StringRecord;
 use company::field_map::FieldMap;
 
-const TOTAL_COMPANY_COUNT: f64 = 5467419.0;
+const TOTAL_COMPANY_COUNT: f64 = 5476771.0;
 
 fn main() {
   if let Err(err) = run() {
@@ -16,7 +16,7 @@ fn main() {
 
 fn run() -> Result<(), Box<dyn Error>> {
   // open input csv file
-  let input_file = File::open("./data/Company.csv")?;
+  let input_file = File::open("../data/company_old.csv")?;
   // create reader for input csv file
   let mut reader = csv::Reader::from_reader(input_file);
   // create FieldMap
@@ -26,29 +26,33 @@ fn run() -> Result<(), Box<dyn Error>> {
   let output_headers: Vec<String> = headers
     .iter()
     .map(|field| {
-      let field = field.to_string();
+      let binding = field.to_string();
+      let field = binding.trim_start();
       map.get(&field)
     })
     .collect();
 
   let mut count = 0;
-  let mut writer = csv::Writer::from_path("./data/Company2.csv")?;
+  let mut writer = csv::Writer::from_path("../data/company.csv")?;
   let _ = writer.write_record(&StringRecord::from(output_headers));
   for result in reader.records() {
     let record = result?;
     writer.write_record(&record)?;
     count += 1;
     if count % 1000 == 0 {
-      show_progress(&count);
+      show_progress(&mut count, false);
     }
   }
-  show_progress(&count);
+  show_progress(&mut count, true);
   let _ = writer.flush();
 
   Ok(())
 }
 
-fn show_progress(count: &i32) {
-  print!("\rRecords processed: {} ({:.4}% done)", count, (*count as f64 / TOTAL_COMPANY_COUNT) * 100.0);
-  std::io::stdout().flush().unwrap();
+fn show_progress(count: &mut i32, show_all: bool) -> Result<(), Box<dyn Error>> {
+  if show_all || *count % 1000 == 0 {
+    print!("\rRecords processed: {} ({:.4}% done)", count, (*count as f64 / TOTAL_COMPANY_COUNT) * 100.0);
+    std::io::stdout().flush()?;
+  }
+  Ok(())
 }

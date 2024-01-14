@@ -5,7 +5,7 @@ use std::{
 };
 
 fn run() -> Result<(), Box<dyn Error>> {
-  let input_file = File::open("./data/Company.csv")?;
+  let input_file = File::open("./data/company_old.csv")?;
   let mut reader = csv::Reader::from_reader(input_file);
   {
     // We nest this call in its own scope because of lifetimes.
