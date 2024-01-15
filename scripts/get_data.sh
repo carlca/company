@@ -7,12 +7,12 @@ download_company_file() {
     if [ "$choice" = "y" ]; then
         current_date=$(date +'%Y-%m-01')
         download_link="https://download.companieshouse.gov.uk/BasicCompanyDataAsOneFile-$current_date.zip"
-#        rm -rf ../data/company.zip
-#        rm -rf ../data/company_old.csv
-#        rm -rf ../data/company.csv
-#        curl $download_link --output ../data/company.zip
-#        unzip ../data/company.zip -d ../data/
-#        mv ../data/BasicCompanyDataAsOneFile-*.csv ../data/company_old.csv
+        rm -rf ../data/company.zip
+        rm -rf ../data/company_old.csv
+        rm -rf ../data/company.csv
+        curl $download_link --output ../data/company.zip
+        unzip ../data/company.zip -d ../data/
+        mv ../data/BasicCompanyDataAsOneFile-*.csv ../data/company_old.csv
         ./rename_csv_fields
         mongoimport --db company --collection company --type csv --headerline --file ../data/company.csv
     fi
